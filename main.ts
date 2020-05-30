@@ -125,53 +125,34 @@ class Flock {
   public closeYTop(boid: Boid): boolean {
     let distanceY = Math.abs(boid.y() * -1);
 
-    if (distanceY < CLOSE_WALL_DISTANCE) {
-      return true;
-    } else {
-      return false;
-    }
+    return distanceY < CLOSE_WALL_DISTANCE ? true : false
   }
 
   // 下の壁と近いか
   public closeYButtom(boid: Boid): boolean {
     let distanceY = Math.abs(WALLY + boid.y());
 
-    if (distanceY < CLOSE_WALL_DISTANCE) {
-      return true;
-    } else {
-      return false;
-    }
+    return distanceY < CLOSE_WALL_DISTANCE ? true : false
   }
 
   // 左の壁と近いか
   public closeXLeft(boid: Boid): boolean {
     let distanceX = Math.abs(boid.x());
 
-    if (distanceX < CLOSE_WALL_DISTANCE) {
-      return true;
-    } else {
-      return false;
-    }
+    return distanceX < CLOSE_WALL_DISTANCE ? true : false
   }
 
   // 右の壁に近いか
   public closeXRight(boid: Boid): boolean {
     let distanceX = Math.abs(WALLX - boid.x());
 
-    if (distanceX < CLOSE_WALL_DISTANCE) {
-      return true;
-    } else {
-      return false;
-    }
+    return distanceX < CLOSE_WALL_DISTANCE ? true : false
   }
 
   public faceYTop(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
-    if (rad < 3.14159 && rad > 0) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return rad < 3.14159 && rad > 0 ? true : false
   }
 
   public faceYButtom(boid: Boid): boolean {
@@ -189,21 +170,15 @@ class Flock {
   // drads の平均が左を向いているかどうか
   public faceX0(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
-    if ((rad < 4.71239 && rad > 1.5708) || (rad < -1.5708 && rad > -4.71239)) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return ((rad < 4.71239 && rad > 1.5708) || (rad < -1.5708 && rad > -4.71239)) ? true : false
   }
 
   // drads の平均が右を向いているかどうか
   public faceX(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
-    if ((rad > -1.5708 && rad < 1.5708) || rad > 4.71239) {
-      return true;
-    } else {
-      return false;
-    }
+
+    return ((rad > -1.5708 && rad < 1.5708) || rad > 4.71239) ? true : false
   }
 
   // X向きのベクトルを反転
@@ -298,9 +273,7 @@ class Flock {
   // 引数のBoidの向き先を他のBoidの平均と合わせる
   public matchVelocity(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
-    if (boids.length == 0) {
-      return;
-    }
+    if (boids.length == 0) return;
 
     let aveRad = this.calcAverageRadianBoids(boids);
     boid.drads.push(aveRad);
@@ -336,9 +309,7 @@ class Flock {
   // 引数Boidの向き先をその他Boidの中央に向ける
   public turnFlockCenter(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
-    if (boids.length == 0) {
-      return;
-    }
+    if (boids.length == 0) return;
 
     // 中央の座標を求める
     let averageCoordinate = this.calcAverageCoordinate(boids);
@@ -445,11 +416,6 @@ btn.addEventListener("click", function () {
   for (let boid of boids) {
     flock.calcDRads(boid); // drads に色々入れる
     flock.updateCoordinateAndRad(boid);
-
-    if (boid.id == 1) {
-      console.log("===after update");
-      dumpBoid(boid);
-    }
 
     // 画面上の向きを変える
     let div = document.getElementById("boid" + boid.id);
