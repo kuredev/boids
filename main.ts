@@ -196,7 +196,6 @@ class Flock {
     }
   }
 
-  // 済
   // drads の平均が右を向いているかどうか
   public faceX(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
@@ -207,7 +206,7 @@ class Flock {
     }
   }
 
-  // 済
+  // X向きのベクトルを反転
   public inversionX(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dx = Math.cos(aveRad);
@@ -218,6 +217,7 @@ class Flock {
     return boid;
   }
 
+  // Y向きのベクトルを反転
   public inversionY(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dy = Math.sin(aveRad);
