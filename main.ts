@@ -86,13 +86,13 @@ class Flock {
     this.avoidWall(boid); // 壁が来たら跳ね返る。
   }
 
-  public radToDrads(boid: Boid): Boid {
+  private radToDrads(boid: Boid): Boid {
     boid.drads.push(boid.rad);
     return boid;
   }
 
   // 壁を避ける
-  public avoidWall(boid: Boid): Boid {
+  private avoidWall(boid: Boid): Boid {
     // X方向の壁とぶつかる（一定距離より近い）、かつ、そのX方向と逆にすすめる
     // とりあえず単純にいまの座標で考える。サンプルコードがそうなっているので。
     // それまでのRad計算は全部無視する
@@ -122,40 +122,40 @@ class Flock {
   }
 
   // 上の壁と近いか
-  public closeYTop(boid: Boid): boolean {
+  private closeYTop(boid: Boid): boolean {
     let distanceY = Math.abs(boid.y() * -1);
 
     return distanceY < CLOSE_WALL_DISTANCE ? true : false
   }
 
   // 下の壁と近いか
-  public closeYButtom(boid: Boid): boolean {
+  private closeYButtom(boid: Boid): boolean {
     let distanceY = Math.abs(WALLY + boid.y());
 
     return distanceY < CLOSE_WALL_DISTANCE ? true : false
   }
 
   // 左の壁と近いか
-  public closeXLeft(boid: Boid): boolean {
+  private closeXLeft(boid: Boid): boolean {
     let distanceX = Math.abs(boid.x());
 
     return distanceX < CLOSE_WALL_DISTANCE ? true : false
   }
 
   // 右の壁に近いか
-  public closeXRight(boid: Boid): boolean {
+  private closeXRight(boid: Boid): boolean {
     let distanceX = Math.abs(WALLX - boid.x());
 
     return distanceX < CLOSE_WALL_DISTANCE ? true : false
   }
 
-  public faceYTop(boid: Boid): boolean {
+  private faceYTop(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
     return rad < 3.14159 && rad > 0 ? true : false
   }
 
-  public faceYButtom(boid: Boid): boolean {
+  private faceYButtom(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
     if (
       (rad < 6.28319 && rad > 3.14159) ||
@@ -168,21 +168,21 @@ class Flock {
   }
 
   // drads の平均が左を向いているかどうか
-  public faceX0(boid: Boid): boolean {
+  private faceX0(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
     return ((rad < 4.71239 && rad > 1.5708) || (rad < -1.5708 && rad > -4.71239)) ? true : false
   }
 
   // drads の平均が右を向いているかどうか
-  public faceX(boid: Boid): boolean {
+  private faceX(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
     return ((rad > -1.5708 && rad < 1.5708) || rad > 4.71239) ? true : false
   }
 
   // X向きのベクトルを反転
-  public inversionX(boid: Boid): Boid {
+  private inversionX(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dx = Math.cos(aveRad);
     let dxNew = dx * -1;
@@ -193,7 +193,7 @@ class Flock {
   }
 
   // Y向きのベクトルを反転
-  public inversionY(boid: Boid): Boid {
+  private inversionY(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dy = Math.sin(aveRad);
     let dyNew = dy * -1;
@@ -220,7 +220,7 @@ class Flock {
   }
 
   // 座標を引数の角度（ラジアン）にしたがって移動させる
-  public addCordinateToRad(c: Coordinate, rad: number): Coordinate {
+  private addCordinateToRad(c: Coordinate, rad: number): Coordinate {
     return {
       x: c.x + Math.cos(rad) * MOVE_FACTOR,
       y: c.y + Math.sin(rad) * MOVE_FACTOR,
@@ -228,7 +228,7 @@ class Flock {
   }
 
   // Boidが避けるべきBoidが見つかったら反対方向に向く
-  public avoidOtherBoids(boid: Boid) {
+  private avoidOtherBoids(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
     let rads: Array<number> = [];
     for (let otherBoid of boids) {
@@ -253,13 +253,13 @@ class Flock {
 
   // ベクトルを反転させる
   // 例 { 1, 1} -> { -1, -1}
-  public inversionVector(vector: Vector): Vector {
+  private inversionVector(vector: Vector): Vector {
     let resultVector: Vector = { x: vector.x * -1, y: vector.y * -1 };
     return resultVector;
   }
 
   // c1 と c2 の座標の距離が standardDinstance より近いか
-  public closeDistanceCoordinate(
+  private closeDistanceCoordinate(
     c1: Coordinate,
     c2: Coordinate,
     standardDistance: number
@@ -271,7 +271,7 @@ class Flock {
   }
 
   // 引数のBoidの向き先を他のBoidの平均と合わせる
-  public matchVelocity(boid: Boid) {
+  private matchVelocity(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
     if (boids.length == 0) return;
 
@@ -280,7 +280,7 @@ class Flock {
   }
 
   // 引数のラジアンの平均のラジアンを返す
-  public calcAverageRad(r1: number, r2: number): number {
+  private calcAverageRad(r1: number, r2: number): number {
     let dx1 = Math.cos(r1);
     let dx2 = Math.cos(r2);
 
@@ -294,7 +294,7 @@ class Flock {
   }
 
   // 引数のラジアンの平均のラジアンを返す
-  public calcAverageRads(rads: Array<number>): number {
+  private calcAverageRads(rads: Array<number>): number {
     let sumX: number = 0;
     let sumY: number = 0;
 
@@ -307,7 +307,7 @@ class Flock {
   }
 
   // 引数Boidの向き先をその他Boidの中央に向ける
-  public turnFlockCenter(boid: Boid) {
+  private turnFlockCenter(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
     if (boids.length == 0) return;
 
@@ -325,7 +325,7 @@ class Flock {
 
   // インスタンス変数のBoidsから引数Boidを排除したBoidsを新たに生成して返します
   // （インスタンス変数のBoidsには変更は加わりません）
-  public extractBoidFromBoids(boid: Boid): Array<Boid> {
+  private extractBoidFromBoids(boid: Boid): Array<Boid> {
     let except_boids = this.boids.filter(function (boid_) {
       return boid != boid_;
     });
@@ -333,17 +333,17 @@ class Flock {
   }
 
   // ベクトルからラジアンに変換
-  public vectorToRadian(vector: Vector): number {
+  private vectorToRadian(vector: Vector): number {
     return Math.atan2(vector.y, vector.x);
   }
 
   // 2座標間(c1 -> c2)のベクトルを求める
-  public coordinatesToVector(c1: Coordinate, c2: Coordinate): Vector {
+  private coordinatesToVector(c1: Coordinate, c2: Coordinate): Vector {
     return { x: c2.x - c1.x, y: c2.y - c1.y };
   }
 
   // 引数のBoidsたちの座標の平均を求める
-  public calcAverageCoordinate(boids: Array<Boid>): Coordinate {
+  private calcAverageCoordinate(boids: Array<Boid>): Coordinate {
     var sumX = 0;
     var sumY = 0;
     for (let boid of boids) {
@@ -354,7 +354,7 @@ class Flock {
   }
 
   // 引数のBoidsたちの持っているRadの平均を求める
-  public calcAverageRadianBoids(boids: Array<Boid>): number {
+  private calcAverageRadianBoids(boids: Array<Boid>): number {
     let sumDx = 0;
     let sumDy = 0;
     for (let boid of boids) {
