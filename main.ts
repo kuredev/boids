@@ -125,34 +125,34 @@ class Flock {
   private closeYTop(boid: Boid): boolean {
     let distanceY = Math.abs(boid.y() * -1);
 
-    return distanceY < CLOSE_WALL_DISTANCE ? true : false
+    return distanceY < CLOSE_WALL_DISTANCE ? true : false;
   }
 
   // 下の壁と近いか
   private closeYButtom(boid: Boid): boolean {
     let distanceY = Math.abs(WALLY + boid.y());
 
-    return distanceY < CLOSE_WALL_DISTANCE ? true : false
+    return distanceY < CLOSE_WALL_DISTANCE ? true : false;
   }
 
   // 左の壁と近いか
   private closeXLeft(boid: Boid): boolean {
     let distanceX = Math.abs(boid.x());
 
-    return distanceX < CLOSE_WALL_DISTANCE ? true : false
+    return distanceX < CLOSE_WALL_DISTANCE ? true : false;
   }
 
   // 右の壁に近いか
   private closeXRight(boid: Boid): boolean {
     let distanceX = Math.abs(WALLX - boid.x());
 
-    return distanceX < CLOSE_WALL_DISTANCE ? true : false
+    return distanceX < CLOSE_WALL_DISTANCE ? true : false;
   }
 
   private faceYTop(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
-    return rad < 3.14159 && rad > 0 ? true : false
+    return rad < 3.14159 && rad > 0 ? true : false;
   }
 
   private faceYButtom(boid: Boid): boolean {
@@ -171,14 +171,16 @@ class Flock {
   private faceX0(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
-    return ((rad < 4.71239 && rad > 1.5708) || (rad < -1.5708 && rad > -4.71239)) ? true : false
+    return (rad < 4.71239 && rad > 1.5708) || (rad < -1.5708 && rad > -4.71239)
+      ? true
+      : false;
   }
 
   // drads の平均が右を向いているかどうか
   private faceX(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
-    return ((rad > -1.5708 && rad < 1.5708) || rad > 4.71239) ? true : false
+    return (rad > -1.5708 && rad < 1.5708) || rad > 4.71239 ? true : false;
   }
 
   // X向きのベクトルを反転
