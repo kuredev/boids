@@ -84,29 +84,45 @@ class Flock {
     this.avoidWall(boid);
   }
 
-  private radToDrads(boid: Boid): Boid {
-    boid.drads.push(boid.rad);
-    return boid;
+  // Update the Boid coordinates using the accumulated drads
+  public updateCoordinateAndRad(boid: Boid) {
+    let aveRad = this.calcAverageRads(boid.drads);
+    let aveDradsUpteaed = this.calcAverageRad(aveRad, boid.rad);
+    let updatedCoordinate = this.addCordinateToRad(
+      boid.coordinate,
+      aveDradsUpteaed
+    );
+    boid.drads = [];
+    boid.rad = aveDradsUpteaed;
+
+    boid.coordinate = updatedCoordinate;
+  }
+
+  private addCordinateToRad(c: Coordinate, rad: number): Coordinate {
+    return {
+      x: c.x + Math.cos(rad) * MOVE_FACTOR,
+      y: c.y + Math.sin(rad) * MOVE_FACTOR,
+    };
   }
 
   private avoidWall(boid: Boid): Boid {
     if (
-      (this.closeXRight(boid) && this.faceRight(boid)) ||
+      (this.closeRight(boid) && this.faceRight(boid)) ||
       (boid.coordinate.x > WALLX && this.faceRight(boid))
     ) {
       this.inversionX(boid);
     } else if (
-      (this.closeXLeft(boid) && this.faceLeft(boid)) ||
+      (this.closeLeft(boid) && this.faceLeft(boid)) ||
       (boid.coordinate.x < 0 && this.faceLeft(boid))
     ) {
       this.inversionX(boid);
     } else if (
-      (this.closeYTop(boid) && this.faceTop(boid)) ||
+      (this.closeTop(boid) && this.faceTop(boid)) ||
       (boid.coordinate.y > 0 && this.faceTop(boid))
     ) {
       this.inversionY(boid);
     } else if (
-      (this.closeYButtom(boid) && this.faceDown(boid)) ||
+      (this.closeButtom(boid) && this.faceDown(boid)) ||
       (boid.y() * -1 > WALLY && this.faceDown(boid))
     ) {
       this.inversionY(boid);
@@ -115,35 +131,130 @@ class Flock {
     return boid;
   }
 
-  // Is it close to the top wall?
-  private closeYTop(boid: Boid): boolean {
-    let distanceY = Math.abs(boid.y() * -1);
+  private avoidOtherBoids(boid: Boid) {
+    let boids = this.extractBoidFromBoids(boid);
+    let rads: Array<number> = [];
+    for (let otherBoid of boids) {
+      let closeDistance: boolean = this.closeDistanceCoordinate(
+        boid.coordinate,
+        otherBoid.coordinate,
+        CLOSE_BOID_DISTANCE
+      );
+      if (closeDistance) {
+        let vector: Vector = this.coordinatesToVector(
+          boid.coordinate,
+          otherBoid.coordinate
+        );
+        let _vector = this.inversionVector(vector);
+        rads.push(this.vectorToRadian(_vector));
+      }
+    }
 
-    return distanceY < CLOSE_WALL_DISTANCE ? true : false;
+    let aveRad: number = this.calcAverageRads(rads);
+    boid.drads.push(aveRad);
   }
 
-  private closeYButtom(boid: Boid): boolean {
+  private calcAverageCoordinate(boids: Array<Boid>): Coordinate {
+    var sumX = 0;
+    var sumY = 0;
+    for (let boid of boids) {
+      sumX += boid.x();
+      sumY += boid.y();
+    }
+    return { x: sumX / boids.length, y: sumY / boids.length };
+  }
+
+  private calcAverageRad(r1: number, r2: number): number {
+    let dx1 = Math.cos(r1);
+    let dx2 = Math.cos(r2);
+
+    let dy1 = Math.sin(r1);
+    let dy2 = Math.sin(r2);
+
+    let dx = (dx1 + dx2) / 2;
+    let dy = (dy1 + dy2) / 2;
+
+    return Math.atan2(dy, dx);
+  }
+
+  private calcAverageRadianBoids(boids: Array<Boid>): number {
+    let sumDx = 0;
+    let sumDy = 0;
+    for (let boid of boids) {
+      let dx = Math.cos(boid.rad);
+      let dy = Math.sin(boid.rad);
+
+      sumDx += dx;
+      sumDy += dy;
+    }
+    let aveDx = sumDx / boids.length;
+    let aveDy = sumDy / boids.length;
+
+    let averad = Math.atan2(aveDy, aveDx);
+    return averad;
+  }
+
+  private calcAverageRads(rads: Array<number>): number {
+    let sumX: number = 0;
+    let sumY: number = 0;
+
+    for (let rad of rads) {
+      sumX += Math.cos(rad);
+      sumY += Math.sin(rad);
+    }
+
+    return this.vectorToRadian({ x: sumX, y: sumY });
+  }
+
+
+  // Whether the distance between the coordinates of c1 and c2 is closer than standardDinstance
+  private closeDistanceCoordinate(
+    c1: Coordinate,
+    c2: Coordinate,
+    standardDistance: number
+  ): boolean {
+    let distance: number = Math.sqrt(
+      Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2)
+    );
+    return distance < standardDistance ? true : false;
+  }
+
+  private closeButtom(boid: Boid): boolean {
     let distanceY = Math.abs(WALLY + boid.y());
 
     return distanceY < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  private closeXLeft(boid: Boid): boolean {
+  private closeLeft(boid: Boid): boolean {
     let distanceX = Math.abs(boid.x());
 
     return distanceX < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  private closeXRight(boid: Boid): boolean {
+  // Is it close to the top wall?
+  private closeTop(boid: Boid): boolean {
+    let distanceY = Math.abs(boid.y() * -1);
+
+    return distanceY < CLOSE_WALL_DISTANCE ? true : false;
+  }
+
+  private closeRight(boid: Boid): boolean {
     let distanceX = Math.abs(WALLX - boid.x());
 
     return distanceX < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  private faceTop(boid: Boid): boolean {
-    let rad = this.calcAverageRads(boid.drads);
+  private coordinatesToVector(c1: Coordinate, c2: Coordinate): Vector {
+    return { x: c2.x - c1.x, y: c2.y - c1.y };
+  }
 
-    return rad < 3.14159 && rad > 0 ? true : false;
+   // Creates and returns a new Boids that excludes the argument Boid from the instance variable Boids.
+  // (No change is made to the instance variable Boids)
+  private extractBoidFromBoids(boid: Boid): Array<Boid> {
+    let except_boids = this.boids.filter(function (boid_) {
+      return boid != boid_;
+    });
+    return except_boids;
   }
 
   private faceDown(boid: Boid): boolean {
@@ -172,6 +283,12 @@ class Flock {
     return (rad > -1.5708 && rad < 1.5708) || rad > 4.71239 ? true : false;
   }
 
+  private faceTop(boid: Boid): boolean {
+    let rad = this.calcAverageRads(boid.drads);
+
+    return rad < 3.14159 && rad > 0 ? true : false;
+  }
+
   private inversionX(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dx = Math.cos(aveRad);
@@ -193,66 +310,10 @@ class Flock {
     return boid;
   }
 
-  // Update the Boid coordinates using the accumulated drads
-  public updateCoordinateAndRad(boid: Boid) {
-    let aveRad = this.calcAverageRads(boid.drads);
-    let aveDradsUpteaed = this.calcAverageRad(aveRad, boid.rad);
-    let updatedCoordinate = this.addCordinateToRad(
-      boid.coordinate,
-      aveDradsUpteaed
-    );
-    boid.drads = [];
-    boid.rad = aveDradsUpteaed;
-
-    boid.coordinate = updatedCoordinate;
-  }
-
-  private addCordinateToRad(c: Coordinate, rad: number): Coordinate {
-    return {
-      x: c.x + Math.cos(rad) * MOVE_FACTOR,
-      y: c.y + Math.sin(rad) * MOVE_FACTOR,
-    };
-  }
-
-  private avoidOtherBoids(boid: Boid) {
-    let boids = this.extractBoidFromBoids(boid);
-    let rads: Array<number> = [];
-    for (let otherBoid of boids) {
-      let closeDistance: boolean = this.closeDistanceCoordinate(
-        boid.coordinate,
-        otherBoid.coordinate,
-        CLOSE_BOID_DISTANCE
-      );
-      if (closeDistance) {
-        let vector: Vector = this.coordinatesToVector(
-          boid.coordinate,
-          otherBoid.coordinate
-        );
-        let _vector = this.inversionVector(vector);
-        rads.push(this.vectorToRadian(_vector));
-      }
-    }
-
-    let aveRad: number = this.calcAverageRads(rads);
-    boid.drads.push(aveRad);
-  }
-
   // ex: { 1, 1} -> { -1, -1}
   private inversionVector(vector: Vector): Vector {
     let resultVector: Vector = { x: vector.x * -1, y: vector.y * -1 };
     return resultVector;
-  }
-
-  // Whether the distance between the coordinates of c1 and c2 is closer than standardDinstance
-  private closeDistanceCoordinate(
-    c1: Coordinate,
-    c2: Coordinate,
-    standardDistance: number
-  ): boolean {
-    let distance: number = Math.sqrt(
-      Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y, 2)
-    );
-    return distance < standardDistance ? true : false;
   }
 
   private matchVelocity(boid: Boid) {
@@ -261,31 +322,6 @@ class Flock {
 
     let aveRad = this.calcAverageRadianBoids(boids);
     boid.drads.push(aveRad);
-  }
-
-  private calcAverageRad(r1: number, r2: number): number {
-    let dx1 = Math.cos(r1);
-    let dx2 = Math.cos(r2);
-
-    let dy1 = Math.sin(r1);
-    let dy2 = Math.sin(r2);
-
-    let dx = (dx1 + dx2) / 2;
-    let dy = (dy1 + dy2) / 2;
-
-    return Math.atan2(dy, dx);
-  }
-
-  private calcAverageRads(rads: Array<number>): number {
-    let sumX: number = 0;
-    let sumY: number = 0;
-
-    for (let rad of rads) {
-      sumX += Math.cos(rad);
-      sumY += Math.sin(rad);
-    }
-
-    return this.vectorToRadian({ x: sumX, y: sumY });
   }
 
   private turnFlockCenter(boid: Boid) {
@@ -301,48 +337,14 @@ class Flock {
     boid.drads.push(drad);
   }
 
-  // Creates and returns a new Boids that excludes the argument Boid from the instance variable Boids.
-  // (No change is made to the instance variable Boids)
-  private extractBoidFromBoids(boid: Boid): Array<Boid> {
-    let except_boids = this.boids.filter(function (boid_) {
-      return boid != boid_;
-    });
-    return except_boids;
+
+  private radToDrads(boid: Boid): Boid {
+    boid.drads.push(boid.rad);
+    return boid;
   }
 
   private vectorToRadian(vector: Vector): number {
     return Math.atan2(vector.y, vector.x);
-  }
-
-  private coordinatesToVector(c1: Coordinate, c2: Coordinate): Vector {
-    return { x: c2.x - c1.x, y: c2.y - c1.y };
-  }
-
-  private calcAverageCoordinate(boids: Array<Boid>): Coordinate {
-    var sumX = 0;
-    var sumY = 0;
-    for (let boid of boids) {
-      sumX += boid.x();
-      sumY += boid.y();
-    }
-    return { x: sumX / boids.length, y: sumY / boids.length };
-  }
-
-  private calcAverageRadianBoids(boids: Array<Boid>): number {
-    let sumDx = 0;
-    let sumDy = 0;
-    for (let boid of boids) {
-      let dx = Math.cos(boid.rad);
-      let dy = Math.sin(boid.rad);
-
-      sumDx += dx;
-      sumDy += dy;
-    }
-    let aveDx = sumDx / boids.length;
-    let aveDy = sumDy / boids.length;
-
-    let averad = Math.atan2(aveDy, aveDx);
-    return averad;
   }
 }
 
