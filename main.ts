@@ -1,11 +1,10 @@
 import _ = require("lodash");
 import anime = require("animejs");
 
-// 最低限壁と離れていてほしい距離
+// The distance want to be away from the wall
 const CLOSE_WALL_DISTANCE = 20;
-// 他のBoidと離れていてほしい距離
+// The distance want to be away from other boids
 const CLOSE_BOID_DISTANCE = 80;
-// Boidを移動させるときの係数（数が大きいほど一度に大きく移動する）
 const MOVE_FACTOR = 10;
 let WALLX = 500;
 let WALLY = 280;
@@ -33,7 +32,7 @@ class Boid {
     this.coordinate = coordinate;
     this.rad = rad;
     this.distance = distance === undefined ? 1 : distance;
-    this.drads = []; // // 計算途中のdrad 置き場。最後に平均値をdradに入れて中身を消す
+    this.drads = []; // Stores the direction of each force to calculate the moving direction
   }
 
   public x() {
@@ -57,13 +56,11 @@ class Boid {
   }
 }
 
-// 群れ
 class Flock {
   constructor(private boids?: Array<Boid>) {
     this.boids = boids;
   }
 
-  // いくつかBoidを生成して返します
   public static createBoids(_num?: number): Array<Boid> {
     let num = _num === undefined ? 1 : _num;
     let boids = [];
@@ -79,11 +76,12 @@ class Flock {
   }
 
   public calcDRads(boid: Boid) {
-    this.radToDrads(boid); // 既存のRadianを更新用の箱に入れる
-    this.turnFlockCenter(boid); // 群れの中央に向く
-    this.matchVelocity(boid); // 群れと向きをあわせる
-    this.avoidOtherBoids(boid); // 近い群れと離れる
-    this.avoidWall(boid); // 壁が来たら跳ね返る。
+    this.radToDrads(boid);
+
+    this.turnFlockCenter(boid);
+    this.matchVelocity(boid);
+    this.avoidOtherBoids(boid);
+    this.avoidWall(boid);
   }
 
   private radToDrads(boid: Boid): Boid {
@@ -91,29 +89,25 @@ class Flock {
     return boid;
   }
 
-  // 壁を避ける
   private avoidWall(boid: Boid): Boid {
-    // X方向の壁とぶつかる（一定距離より近い）、かつ、そのX方向と逆にすすめる
-    // とりあえず単純にいまの座標で考える。サンプルコードがそうなっているので。
-    // それまでのRad計算は全部無視する
     if (
-      (this.closeXRight(boid) && this.faceX(boid)) ||
-      (boid.coordinate.x > WALLX && this.faceX(boid))
+      (this.closeXRight(boid) && this.faceRight(boid)) ||
+      (boid.coordinate.x > WALLX && this.faceRight(boid))
     ) {
       this.inversionX(boid);
     } else if (
-      (this.closeXLeft(boid) && this.faceX0(boid)) ||
-      (boid.coordinate.x < 0 && this.faceX0(boid))
+      (this.closeXLeft(boid) && this.faceLeft(boid)) ||
+      (boid.coordinate.x < 0 && this.faceLeft(boid))
     ) {
       this.inversionX(boid);
     } else if (
-      (this.closeYTop(boid) && this.faceYTop(boid)) ||
-      (boid.coordinate.y > 0 && this.faceYTop(boid))
+      (this.closeYTop(boid) && this.faceTop(boid)) ||
+      (boid.coordinate.y > 0 && this.faceTop(boid))
     ) {
       this.inversionY(boid);
     } else if (
-      (this.closeYButtom(boid) && this.faceYButtom(boid)) ||
-      (boid.y() * -1 > WALLY && this.faceYButtom(boid))
+      (this.closeYButtom(boid) && this.faceDown(boid)) ||
+      (boid.y() * -1 > WALLY && this.faceDown(boid))
     ) {
       this.inversionY(boid);
     }
@@ -121,41 +115,38 @@ class Flock {
     return boid;
   }
 
-  // 上の壁と近いか
+  // Is it close to the top wall?
   private closeYTop(boid: Boid): boolean {
     let distanceY = Math.abs(boid.y() * -1);
 
     return distanceY < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  // 下の壁と近いか
   private closeYButtom(boid: Boid): boolean {
     let distanceY = Math.abs(WALLY + boid.y());
 
     return distanceY < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  // 左の壁と近いか
   private closeXLeft(boid: Boid): boolean {
     let distanceX = Math.abs(boid.x());
 
     return distanceX < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  // 右の壁に近いか
   private closeXRight(boid: Boid): boolean {
     let distanceX = Math.abs(WALLX - boid.x());
 
     return distanceX < CLOSE_WALL_DISTANCE ? true : false;
   }
 
-  private faceYTop(boid: Boid): boolean {
+  private faceTop(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
     return rad < 3.14159 && rad > 0 ? true : false;
   }
 
-  private faceYButtom(boid: Boid): boolean {
+  private faceDown(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
     if (
       (rad < 6.28319 && rad > 3.14159) ||
@@ -167,8 +158,7 @@ class Flock {
     }
   }
 
-  // drads の平均が左を向いているかどうか
-  private faceX0(boid: Boid): boolean {
+  private faceLeft(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
     return (rad < 4.71239 && rad > 1.5708) || (rad < -1.5708 && rad > -4.71239)
@@ -176,14 +166,12 @@ class Flock {
       : false;
   }
 
-  // drads の平均が右を向いているかどうか
-  private faceX(boid: Boid): boolean {
+  private faceRight(boid: Boid): boolean {
     let rad = this.calcAverageRads(boid.drads);
 
     return (rad > -1.5708 && rad < 1.5708) || rad > 4.71239 ? true : false;
   }
 
-  // X向きのベクトルを反転
   private inversionX(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dx = Math.cos(aveRad);
@@ -194,7 +182,6 @@ class Flock {
     return boid;
   }
 
-  // Y向きのベクトルを反転
   private inversionY(boid: Boid): Boid {
     let aveRad = this.calcAverageRads(boid.drads);
     let dy = Math.sin(aveRad);
@@ -206,22 +193,20 @@ class Flock {
     return boid;
   }
 
-  // 溜まった drads をベースに rad に移動するべき向きを代入する
-  // 代入時にcoordinate に Y座標は反転させる
+  // Update the Boid coordinates using the accumulated drads
   public updateCoordinateAndRad(boid: Boid) {
     let aveRad = this.calcAverageRads(boid.drads);
-    let aveDradsUpteaed = this.calcAverageRad(aveRad, boid.rad); // ★
+    let aveDradsUpteaed = this.calcAverageRad(aveRad, boid.rad);
     let updatedCoordinate = this.addCordinateToRad(
       boid.coordinate,
       aveDradsUpteaed
     );
     boid.drads = [];
-    boid.rad = aveDradsUpteaed; // 次の傾き
+    boid.rad = aveDradsUpteaed;
 
     boid.coordinate = updatedCoordinate;
   }
 
-  // 座標を引数の角度（ラジアン）にしたがって移動させる
   private addCordinateToRad(c: Coordinate, rad: number): Coordinate {
     return {
       x: c.x + Math.cos(rad) * MOVE_FACTOR,
@@ -229,7 +214,6 @@ class Flock {
     };
   }
 
-  // Boidが避けるべきBoidが見つかったら反対方向に向く
   private avoidOtherBoids(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
     let rads: Array<number> = [];
@@ -253,14 +237,13 @@ class Flock {
     boid.drads.push(aveRad);
   }
 
-  // ベクトルを反転させる
-  // 例 { 1, 1} -> { -1, -1}
+  // ex: { 1, 1} -> { -1, -1}
   private inversionVector(vector: Vector): Vector {
     let resultVector: Vector = { x: vector.x * -1, y: vector.y * -1 };
     return resultVector;
   }
 
-  // c1 と c2 の座標の距離が standardDinstance より近いか
+  // Whether the distance between the coordinates of c1 and c2 is closer than standardDinstance
   private closeDistanceCoordinate(
     c1: Coordinate,
     c2: Coordinate,
@@ -272,7 +255,6 @@ class Flock {
     return distance < standardDistance ? true : false;
   }
 
-  // 引数のBoidの向き先を他のBoidの平均と合わせる
   private matchVelocity(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
     if (boids.length == 0) return;
@@ -281,7 +263,6 @@ class Flock {
     boid.drads.push(aveRad);
   }
 
-  // 引数のラジアンの平均のラジアンを返す
   private calcAverageRad(r1: number, r2: number): number {
     let dx1 = Math.cos(r1);
     let dx2 = Math.cos(r2);
@@ -295,7 +276,6 @@ class Flock {
     return Math.atan2(dy, dx);
   }
 
-  // 引数のラジアンの平均のラジアンを返す
   private calcAverageRads(rads: Array<number>): number {
     let sumX: number = 0;
     let sumY: number = 0;
@@ -308,25 +288,21 @@ class Flock {
     return this.vectorToRadian({ x: sumX, y: sumY });
   }
 
-  // 引数Boidの向き先をその他Boidの中央に向ける
   private turnFlockCenter(boid: Boid) {
     let boids = this.extractBoidFromBoids(boid);
     if (boids.length == 0) return;
 
-    // 中央の座標を求める
     let averageCoordinate = this.calcAverageCoordinate(boids);
 
-    // 今の座標から中央の座標へのベクトルを求める
     let vector = this.coordinatesToVector(boid.coordinate, averageCoordinate);
 
-    //求めたベクトルをラジアンに変換してdradに入れる
     let drad = this.vectorToRadian(vector);
 
     boid.drads.push(drad);
   }
 
-  // インスタンス変数のBoidsから引数Boidを排除したBoidsを新たに生成して返します
-  // （インスタンス変数のBoidsには変更は加わりません）
+  // Creates and returns a new Boids that excludes the argument Boid from the instance variable Boids.
+  // (No change is made to the instance variable Boids)
   private extractBoidFromBoids(boid: Boid): Array<Boid> {
     let except_boids = this.boids.filter(function (boid_) {
       return boid != boid_;
@@ -334,17 +310,14 @@ class Flock {
     return except_boids;
   }
 
-  // ベクトルからラジアンに変換
   private vectorToRadian(vector: Vector): number {
     return Math.atan2(vector.y, vector.x);
   }
 
-  // 2座標間(c1 -> c2)のベクトルを求める
   private coordinatesToVector(c1: Coordinate, c2: Coordinate): Vector {
     return { x: c2.x - c1.x, y: c2.y - c1.y };
   }
 
-  // 引数のBoidsたちの座標の平均を求める
   private calcAverageCoordinate(boids: Array<Boid>): Coordinate {
     var sumX = 0;
     var sumY = 0;
@@ -355,7 +328,6 @@ class Flock {
     return { x: sumX / boids.length, y: sumY / boids.length };
   }
 
-  // 引数のBoidsたちの持っているRadの平均を求める
   private calcAverageRadianBoids(boids: Array<Boid>): number {
     let sumDx = 0;
     let sumDy = 0;
@@ -374,6 +346,7 @@ class Flock {
   }
 }
 
+// for debug method
 function dumpBoid(boid: Boid) {
   console.log(boid.id);
   console.log("x: " + boid.coordinate.x);
@@ -383,6 +356,7 @@ function dumpBoid(boid: Boid) {
   console.log("degree: " + boid.rad * (180 / Math.PI));
 }
 
+// for debug method
 function dumpBoids(boids: Array<Boid>) {
   for (let boid of boids) {
     console.log(boid.id);
@@ -412,19 +386,17 @@ let boids: Array<Boid> = Flock.createBoids(30);
 let flock = new Flock(boids);
 viewBoids(boids);
 
-// 動く
+// Move Boid by clicking
 let btn = document.getElementById("move");
 btn.addEventListener("click", function () {
   for (let boid of boids) {
-    flock.calcDRads(boid); // drads に色々入れる
+    flock.calcDRads(boid);
     flock.updateCoordinateAndRad(boid);
 
-    // 画面上の向きを変える
     let div = document.getElementById("boid" + boid.id);
-    let deg = (boid.rad * 180) / Math.PI; // rad はイメージどおりのrad
+    let deg = (boid.rad * 180) / Math.PI;
     div.style.transform = "rotate(" + (90 - deg) + "deg)";
 
-    // 移動
     anime({
       targets: "#boid" + boid.id,
       left: boid.coordinate.x + "px",
@@ -434,13 +406,13 @@ btn.addEventListener("click", function () {
   }
 });
 
+// Boid moves automatically
 let auto_btn = document.getElementById("auto_move");
 function move_loop() {
   for (let boid of boids) {
-    flock.calcDRads(boid); // drads に色々入れる
+    flock.calcDRads(boid);
     flock.updateCoordinateAndRad(boid);
 
-    // 画面上の向きを変える
     let div = document.getElementById("boid" + boid.id);
     div.style.transform = "rotate(" + (90 - boid.deg()) + "deg)";
 
