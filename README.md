@@ -13,3 +13,6 @@ Boids Algorithm written by TypeScript, Anime.js
 ## For Example: Ruby
 % sudo ruby -rwebrick -e 'WEBrick::HTTPServer.new(:DocumentRoot => "./", :Port => 80).start
 ```
+
+# Related Links
+https://qiita.com/kure/items/2638de370974a791756a
