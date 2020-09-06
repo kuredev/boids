@@ -54,6 +54,13 @@ class Boid {
   public deg() {
     return (this.rad * 180) / Math.PI;
   }
+
+  public dump() {
+    console.log("id: " + this.id);
+    console.log("coordinate: " + this.coordinate);
+    console.log("rad: " + this.rad);
+    console.log("distance: " + this.distance);
+  }
 }
 
 class Flock {
@@ -70,7 +77,7 @@ class Flock {
       let y = Math.random() * -300;
       let rad = Math.random() * 2 * Math.PI;
 
-      boids.push(new Boid(i, { x: x, y: y }, rad, 0));
+      boids.push(new Boid(i, { x: x, y: y }, rad, 1));
     }
     return boids;
   }
@@ -92,9 +99,9 @@ class Flock {
       boid.coordinate,
       aveDradsUpteaed
     );
+
     boid.drads = [];
     boid.rad = aveDradsUpteaed;
-
     boid.coordinate = updatedCoordinate;
   }
 
@@ -361,12 +368,7 @@ function dumpBoid(boid: Boid) {
 // for debug method
 function dumpBoids(boids: Array<Boid>) {
   for (let boid of boids) {
-    console.log(boid.id);
-    console.log("x: " + boid.coordinate.x);
-    console.log("y: " + boid.coordinate.y);
-    console.log("rad: " + boid.rad);
-    console.log("deg: " + boid.deg());
-    console.log("drads: " + boid.drads);
+    boid.dump();
   }
 }
 
@@ -384,29 +386,43 @@ function viewBoids(boids: Array<Boid>) {
   });
 }
 
-let boids: Array<Boid> = Flock.createBoids(30);
+function degreeToRad(degree: number){
+  return degree * ( Math.PI / 180 );
+}
+
+//let boids: Array<Boid> = Flock.createBoids(30);
+
+let boid1 = new Boid(0, {x: 10, y: -50 }, degreeToRad(0), 1);
+let boid2 = new Boid(1, {x: 300, y: -200 }, degreeToRad(45), 1);
+let boid3 = new Boid(2, {x: 10, y: -100 }, degreeToRad(0), 1);
+let boid4 = new Boid(3, {x: 200, y: -200 }, degreeToRad(45), 1);
+
+let boids: Array<Boid> = [boid1, boid2, boid3, boid4];
 let flock = new Flock(boids);
 viewBoids(boids);
 
 // Move Boid by clicking
 let btn = document.getElementById("move");
-btn.addEventListener("click", function () {
-  for (let boid of boids) {
-    flock.calcDRads(boid);
-    flock.updateCoordinateAndRad(boid);
+if (btn !== null){
+  btn.addEventListener("click", function () {
+    for (let boid of boids) {
+      flock.calcDRads(boid);
+      flock.updateCoordinateAndRad(boid);
 
-    let div = document.getElementById("boid" + boid.id);
-    let deg = (boid.rad * 180) / Math.PI;
-    div.style.transform = "rotate(" + (90 - deg) + "deg)";
+      let div = document.getElementById("boid" + boid.id);
+      if (div !== null) {
+        div.style.transform = "rotate(" + (90 - boid.deg()) + "deg)";
 
-    anime({
-      targets: "#boid" + boid.id,
-      left: boid.coordinate.x + "px",
-      top: boid.coordinate.y + "px",
-      easing: "linear",
-    });
-  }
-});
+        anime({
+          targets: "#boid" + boid.id,
+          left: boid.coordinate.x + "px",
+          top: -1 * boid.coordinate.y + "px",
+          easing: "linear",
+        });
+      }
+    }
+  });
+}
 
 // Boid moves automatically
 let auto_btn = document.getElementById("auto_move");
@@ -416,17 +432,51 @@ function move_loop() {
     flock.updateCoordinateAndRad(boid);
 
     let div = document.getElementById("boid" + boid.id);
-    div.style.transform = "rotate(" + (90 - boid.deg()) + "deg)";
+    if (div !== null) {
+      div.style.transform = "rotate(" + (90 - boid.deg()) + "deg)";
 
-    anime({
-      targets: "#boid" + boid.id,
-      left: boid.coordinate.x + "px",
-      top: -1 * boid.coordinate.y + "px",
-      easing: "linear",
-    });
+      anime({
+        targets: "#boid" + boid.id,
+        left: boid.coordinate.x + "px",
+        top: -1 * boid.coordinate.y + "px",
+        easing: "linear",
+      });
+    }
   }
 }
 
-auto_btn.addEventListener("click", function () {
-  setInterval(move_loop, 50);
-});
+if (auto_btn !== null){
+  auto_btn.addEventListener("click", function () {
+    setInterval(move_loop, 50);
+  });
+}
+
+// Boid moves automatically Async
+let auto_btn_async = document.getElementById("auto_move_async");
+function move_loop_async() {
+  for (let boid of boids) {
+    flock.calcDRads(boid);
+  }
+
+  for (let boid of boids) {
+    flock.updateCoordinateAndRad(boid);
+
+    let div = document.getElementById("boid" + boid.id);
+    if (div !== null) {
+      div.style.transform = "rotate(" + (90 - boid.deg()) + "deg)";
+
+      anime({
+        targets: "#boid" + boid.id,
+        left: boid.coordinate.x + "px",
+        top: -1 * boid.coordinate.y + "px",
+        easing: "linear",
+      });
+    }
+  }
+}
+
+if (auto_btn_async !== null){
+  auto_btn_async.addEventListener("click", function () {
+    setInterval(move_loop_async, 50);
+  });
+}
