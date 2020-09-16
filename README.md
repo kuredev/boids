@@ -11,7 +11,7 @@ Boids Algorithm written by TypeScript, Anime.js
 % node_modules/.bin/browserify build/main.js -o bundle.js;
 # Run Web Server
 ## For Example: Ruby
-% sudo ruby -rwebrick -e 'WEBrick::HTTPServer.new(:DocumentRoot => "./", :Port => 80).start
+% sudo ruby -rwebrick -e 'WEBrick::HTTPServer.new(:DocumentRoot => "./", :Port => 80).start'
 ```
 
 # Related Links
